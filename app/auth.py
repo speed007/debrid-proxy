@@ -1,20 +1,17 @@
-from datetime import datetime, timedelta
+import os
 import requests
 from .encryption import encrypt_token, decrypt_token
 
-def get_fresh_token(user_token):
-    if datetime.now() >= user_token["expires_at"] - timedelta(minutes=5):
-        response = requests.post(
-            "https://api.real-debrid.com/oauth/v2/token",
-            data={
-                "client_id": os.getenv("RD_CLIENT_ID"),
-                "client_secret": os.getenv("RD_CLIENT_SECRET"),
-                "grant_type": "refresh_token",
-                "refresh_token": decrypt_token(user_token["refresh_token"])
-            }
-        )
-        if response.ok:
-            new_token = response.json()
-            new_token["expires_at"] = datetime.now() + timedelta(seconds=new_token["expires_in"])
-            return encrypt_token(new_token)
-    return user_token["access_token"]
+def authenticate_rd():
+    """Simple API key authentication"""
+    api_key = os.getenv("RD_API_KEY")
+    if not api_key:
+        raise ValueError("Real-Debrid API key not configured")
+    
+    # Verify the API key works
+    response = requests.get(
+        "https://api.real-debrid.com/rest/1.0/user",
+        headers={"Authorization": f"Bearer {api_key}"}
+    )
+    response.raise_for_status()
+    return response.json()
