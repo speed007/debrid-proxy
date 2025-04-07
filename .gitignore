@@ -1,0 +1,10 @@
+# Security
+.env
+*.key
+data/
+__pycache__/
+
+# Docker
+*.env.local
+.env
+data/
